@@ -2,19 +2,19 @@ clear all; clc
 
 % 
 % Generate a Robolink object RDK. This object interfaces with RoboDK.
-RDK = Robolink;
-
-% Display the list of all items in the main tree
-fprintf('Available items in the station:\n');
-disp(RDK.ItemList());
-
-robot = RDK.ItemUserPick('Select one robot', RDK.ITEM_TYPE_ROBOT);
-
-if robot.Valid() == 0
-    error('No robot selected');
-end
-
-fprintf('Selected robot: %s\n', robot.Name());
+% RDK = Robolink;
+% 
+% % Display the list of all items in the main tree
+% fprintf('Available items in the station:\n');
+% disp(RDK.ItemList());
+% 
+% robot = RDK.ItemUserPick('Select one robot', RDK.ITEM_TYPE_ROBOT);
+% 
+% if robot.Valid() == 0
+%     error('No robot selected');
+% end
+% 
+% fprintf('Selected robot: %s\n', robot.Name());
 % 
 %% Calculate Forward Kinematics
 
@@ -35,11 +35,11 @@ w6 = [1 0 0]';
 
 %Screw points
 q1 = [0        0        0]';
-q2 = [0        0        a1]';
-q3 = [0        0        a1+a2]';
-q4 = [d1       0        a1+a2+a3]';
+q2 = [d1        0        a1]';
+q3 = [d1        0        a1+a2]';
+q4 = [d1+d2       0        a1+a2+a3]';
 q5 = [d1+d2    0        a1+a2+a3]';
-q6 = [d1+d2+d3 0        a1+a2+a3]';
+q6 = [d1+d2 0        a1+a2+a3]';
 
 %Point velocities
 v1 = -cross(w1,q1);
@@ -60,7 +60,7 @@ tetd4=deg2rad(0);
 tetd5=deg2rad(61.88);
 tetd6=deg2rad(37.39);
 
-tetd = [tetd1 tetd2 tetd3 tetd4 tetd5 tetd6]
+tetd = [tetd1 tetd2 tetd3 tetd4 tetd5 tetd6];
 
 %Skews
 w1_skew = skew(w1);
@@ -83,7 +83,7 @@ S6_skew = [w6_skew v6; zeros(1,4)];
 
 %Home position
 R0 = [1 0 0; 0 1 0; 0 0 1];
-q0 = [d1+d2+d3 0 a1+a2+a3]';
+q0 = [d1+d2+d3 0        a1+a2+a3]';
 M = [R0 q0; 0 0 0 1];
 
 %Compute forward kinematics
@@ -108,6 +108,49 @@ Td = real(double(subs(T, [tet1 tet2 tet3 tet4 tet5 tet6], tetd)));
 % robot.setPose(Td);
 
 %% Begin I.K Calculations
+%Calculate Teta1
+p1 = expm(S1_skew*tetd1)*expm(S2_skew*tetd2)*...
+    expm(S3_skew*tetd3)*hp(q4)
+p1 = Td*inv(M)*hp(q4)
+p1x = p1(1); p1y = p1(2);
+
+tetc1_1 = atan2( p1y, p1x);
+tetc1_2 = atan2(-p1y,-p1x);
+
+tetc1 = tetc1_1; %Use first or second teta1 value
+
+%Translated points for non-singularity
+q1p = [0 0 0]';      q2p = [0 0 a1]';
+q3p = [0 0 a1+a2]';  q4p = [d2 0 a1+a2+a3]';
+q5p = q4p;           q6p = q4p;
+
+Tt = [1 0 0 -d1*cos(tetc1);
+      0 1 0 -d1*sin(tetc1);
+      0 0 1 0
+      0 0 0 1];
+
+Mp = [1 0 0 d2+d3; 
+      0 1 0 0; 
+      0 0 1 a1+a2+a3; 
+      0 0 0 1]
+  
+%Calculate Teta3
+p2 = Tt * Td* inv(Mp) * hp(q4p) %%**p2 hesabı yanlış
+p2 = expm(S1_skew * tetd1)*expm(S2_skew * tetd2)...
+   * expm(S3_skew * tetd3) * hp(q4p)
+
+r3 = [0 0 a1+a2]';
+sigma = norm((p2)-hp(q2p))
+[tet0, tet3_0] = pk3(w3,q4p,q2,r3,sigma);
+theta3c_1 = tet0+tet3_0
+theta3c_2 = tet0-tet3_0
+
+%Verify results
+tet0_2 = atan2(a2*d2, -a2*a3);
+theta3c_0_2 = acos((d2^2+a3^2+a2^2-p2(1)^2 ...
+-p2(2)^2-(p2(3)-a1)^2) / (2*a2*sqrt(d2^2+a3^2)));
+theta3c_1_2 = tet0_2 + theta3c_0_2
+theta3c_2_2 = tet0_2 - theta3c_0_2
 
 
 
