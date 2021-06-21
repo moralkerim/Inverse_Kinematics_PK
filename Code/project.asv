@@ -117,7 +117,7 @@ p1x = p1(1); p1y = p1(2);
 tetc1_1 = atan2( p1y, p1x);
 tetc1_2 = atan2(-p1y,-p1x);
 
-tetc1 = tetc1_2; %Use first or second teta1 value
+tetc1 = tetc1_1; %Use first or second teta1 value
 
 %Translated points for non-singularity
 q1p = [0 0 0]';      q2p = [0 0 a1]';
@@ -126,27 +126,26 @@ q5p = q4p;           q6p = q4p;
 
 Tt = [1 0 0 -d1*cos(tetc1);
       0 1 0 -d1*sin(tetc1);
-      0 0 1 0;
+      0 0 1 0
       0 0 0 1];
 
 Mp = [1 0 0 d2+d3; 
       0 1 0 0; 
       0 0 1 a1+a2+a3; 
-      0 0 0 1];
+      0 0 0 1]
   
 %Calculate Teta3
-p2 = Tt * Td* inv(Mp) * hp(q4p); %%**p2 hesabı yanlış
-%p2 = expm(S1_skew * tetd1)*expm(S2_skew * tetd2)...
-%   * expm(S3_skew * tetd3) * hp(q4p);
+p2 = Tt * Td* inv(Mp) * hp(q4p) %%**p2 hesabı yanlış
+p2 = expm(S1_skew * tetd1)*expm(S2_skew * tetd2)...
+   * expm(S3_skew * tetd3) * hp(q4p)
 
-% r3 = [0 0 a1+a2]';
-% sigma = norm((p2)-hp(q2p));
-% [tet0, tet3_0] = pk3(w3,q4p,q2,r3,sigma);
-% theta3c_1 = tet0+tet3_0;
-% theta3c_2 = tet0-tet3_0;
+r3 = [0 0 a1+a2]';
+sigma = norm((p2)-hp(q2p))
+[tet0, tet3_0] = pk3(w3,q4p,q2,r3,sigma);
+theta3c_1 = tet0+tet3_0
+theta3c_2 = tet0-tet3_0
 
 %Verify results
-sigma_2 = sqrt(p2(1)^2+p2(2)^2+(p2(3)-a1)^2);
 tet0_2 = atan2(a2*d2, -a2*a3);
 theta3c_0_2 = acos((d2^2+a3^2+a2^2-p2(1)^2 ...
 -p2(2)^2-(p2(3)-a1)^2) / (2*a2*sqrt(d2^2+a3^2)));
