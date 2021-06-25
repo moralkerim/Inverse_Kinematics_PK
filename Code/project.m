@@ -221,8 +221,8 @@ p4x = p4(1); p4y=p4(2); p4z=p4(3);
 tetc4_1 = atan2( p4y, (a1+a2+a3-p4z));
 tetc4_2 = atan2(-p4y,-(a1+a2+a3-p4z));
 
-tetc5_1 = atan2( sqrt(2*p4x*d2-p4x^2),d2-p4x);
-tetc5_2 = atan2(-sqrt(2*p4x*d2-p4x^2),d2-p4x);
+tetc5_2 = atan2( sqrt(2*p4x*d2-p4x^2),d2-p4x);
+tetc5_1 = atan2(-sqrt(2*p4x*d2-p4x^2),d2-p4x);
 
 %Confirm calculations
 % r4 = [d2 0 a1+a2+a3]';
@@ -258,7 +258,7 @@ tetc6 = atan2(p5y, p5z-a1-a2-a3);
 rad2deg(tetc6)
 
 tetc     = [tetc1 tetc2 tetc3 tetc4 tetc5 tetc6];
-tetc_deg = rad2deg(tetc)
+tetc_deg = CheckTet(rad2deg(tetc))
 
 robot.setJoints(tetc_deg);
 pose0 = robot.Pose()
