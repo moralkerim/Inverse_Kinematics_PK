@@ -43,9 +43,9 @@ w6 = [1 0 0]';
 
 %Screw points
 q1 = [0        0        0]';
-q2 = [0       0        a1]';
-q3 = [0       0        a1+a2]';
-q4 = [d2    0        a1+a2+a3]';
+q2 = [d1       0        a1]';
+q3 = [d1       0        a1+a2]';
+q4 = [d1+d2    0        a1+a2+a3]';
 q5 = q4;
 q6 = q4;
 
@@ -64,9 +64,9 @@ tet0 = [0 0 0 0 0 0];
 tetd1=deg2rad(-4.57);
 tetd2=deg2rad(8.88);
 tetd3=deg2rad(17.94);
-tetd4=deg2rad(0);
+tetd4=deg2rad(180);
 tetd5=deg2rad(61.88);
-tetd6=deg2rad(37.39);
+tetd6=deg2rad(-142.61);
 
 %Desired angles
 % tetd1=deg2rad(10);
@@ -142,15 +142,15 @@ q5p = q4p;           q6p = q4p;
 
 
 
-% Tt = [1 0 0 -d1*cos(tetc1);
-%       0 1 0 -d1*sin(tetc1);
-%       0 0 1 0;
-%       0 0 0 1];
-% 
-% Mp = [1 0 0 d2+d3; 
-%       0 1 0 0; 
-%       0 0 1 a1+a2+a3; 
-%       0 0 0 1];
+Tt = [1 0 0 -d1*cos(tetd1);
+      0 1 0 -d1*sin(tetd1);
+      0 0 1 0;
+      0 0 0 1];
+
+Mp = [1 0 0 d2+d3; 
+      0 1 0 0; 
+      0 0 1 a1+a2+a3; 
+      0 0 0 1];
   
 % q1p = Tt*hp(q1);        q4p = Tt*hp(q4);
 % q2p = Tt*hp(q2);        q5p = Tt*hp(q5);
@@ -161,8 +161,8 @@ q5p = q4p;           q6p = q4p;
 % q3p = q3p(1:3);         q6p = q6p(1:3);
   
 %Calculate Teta3
-% T1 = Tt * Td* inv(Mp);
-T1 = Td* inv(M);
+T1 = Tt * Td* inv(Mp);
+% T1 = Td* inv(M);
 p2 = T1 * hp(q4p);
 %p2 = expm(S1_skew * tetd1)*expm(S2_skew * tetd2)...
 %   * expm(S3_skew * tetd3) * hp(q4p);
@@ -184,9 +184,27 @@ thetac3_2_2 = tet0_2 - theta3c_0_2;
 tetc3 = thetac3_2_2; %Teta3 value that is being used.
 
 %Solving teta2
+v1 = -cross(w1,q1p);
+S1_skew = [w1_skew v1; zeros(1,4)];
 
- T2 = expm(-S1_skew*tetc1)* T1
-% T2 = Tt * expm(-S1_skew*tetd1)* Td* inv(Mp)
+v2 = -cross(w2,q2p);
+S2_skew = [w2_skew v2; zeros(1,4)];
+
+v3 = -cross(w3,q3p);
+S3_skew = [w3_skew v3; zeros(1,4)];
+
+v4 = -cross(w4,q4p);
+S4_skew = [w4_skew v4; zeros(1,4)];
+
+v5 = -cross(w5,q5p);
+S5_skew = [w5_skew v5; zeros(1,4)];
+
+v6 = -cross(w6,q6p);
+S6_skew = [w6_skew v6; zeros(1,4)];
+
+
+ T2 = expm(-S1_skew*tetc1)*  Tt * Td* inv(Mp);
+%  T2 = Tt * expm(-S1_skew*tetc1)* Td* inv(Mp)
 %T2 = expm(S2_skew*(tetd2))*expm(S3_skew*tetd3);
 
 q7_hp = expm(S3_skew*tetc3)*hp(q4p);
@@ -211,7 +229,7 @@ tetc2_2 = pk1(w2,q7_hp(1:3),p3(1:3),r2);
 
 %Solving teta4 and teta5
 T3 = expm(-S3_skew*tetc3)*expm(-S2_skew*tetc2)*T2;
-%T3 = expm(S4_skew*0)*expm(S5_skew*deg2rad(-105.65));
+% T3 = Tt * expm(-S3_skew*tetc3)*expm(-S2_skew*tetc2)* expm(-S1_skew*tetc1)* Td* inv(Mp);
 q6pp = [0 0 a1+a2+a3]';
 p4 = T3*hp(q6pp);
 
@@ -246,8 +264,8 @@ tetc5_1 = atan2(-sqrt(2*p4x*d2-p4x^2),d2-p4x);
 
 %tetc4 = 0;
 %tetc5 = deg2rad(-105.65);
-tetc4 = tetc4_1;
-tetc5 = tetc5_1;
+tetc4 = tetc4_2;
+tetc5 = tetc5_2;
 
 %Calculate teta6
 T4 = expm(-S5_skew*tetc5)*expm(-S4_skew*tetc4)*T3;
@@ -255,10 +273,9 @@ q8 = [0 0 a1+a2]';
 p5 = T4 * hp(q8);
 p5x = p5(1); p5y = p5(2); p5z = p5(3);
 tetc6 = atan2(p5y, p5z-a1-a2-a3);
-rad2deg(tetc6)
+tetc6 = pi - tetc6;
 
 tetc     = [tetc1 tetc2 tetc3 tetc4 tetc5 tetc6];
 tetc_deg = CheckTet(rad2deg(tetc))
 
 robot.setJoints(tetc_deg);
-pose0 = robot.Pose()
