@@ -1,0 +1,6 @@
+1-) Open and Run final_project.m on MATLAB
+2-) Open RoboDK and select GSK-RB20
+3-) Press "Connect RoboDK" from Matlab app
+4-) Select input type (example angles or desired end point matrix)
+5-) Press "Solve"
+6-) Enter a solution number from table and press "Show on RoboDK."
